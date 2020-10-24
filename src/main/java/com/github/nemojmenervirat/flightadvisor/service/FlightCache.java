@@ -19,8 +19,7 @@ public class FlightCache {
 	private static final int EXPIRATION_TIME_MINUTES = 30;
 	private List<FlightCacheItem> flightCacheItems = new LinkedList<>();
 
-	public synchronized FlightResponse get(Long sourceCityId, Long destinationCityId) {
-		log.info(flightCacheItems.size() + " items in cache");
+	public synchronized FlightResponse get(long sourceCityId, long destinationCityId) {
 		log.info("Searching cache for {" + sourceCityId + ", " + destinationCityId + "}");
 		FlightCacheItem flightCacheItem = flightCacheItems.stream()
 				.filter(item -> item.getSourceCityId() == sourceCityId
@@ -38,7 +37,7 @@ public class FlightCache {
 		return null;
 	}
 
-	public synchronized void add(Long sourceCityId, Long destinationCityId, FlightResponse flightResponse) {
+	public synchronized void add(long sourceCityId, long destinationCityId, FlightResponse flightResponse) {
 		log.info("Adding to cache {" + sourceCityId + ", " + destinationCityId + ", " + flightResponse.getPrice() + "}");
 		if (flightCacheItems.size() >= CACHE_SIZE) {
 			boolean removed = flightCacheItems.removeIf(item -> item.getModified().isBefore(LocalDateTime.now().minusMinutes(EXPIRATION_TIME_MINUTES)));
@@ -58,25 +57,25 @@ public class FlightCache {
 	}
 
 	class FlightCacheItem {
-		private Long sourceCityId;
-		private Long destinationCityId;
+		private long sourceCityId;
+		private long destinationCityId;
 		private FlightResponse flightResponse;
 		private int usages;
 		private LocalDateTime modified;
 
-		public Long getSourceCityId() {
+		public long getSourceCityId() {
 			return sourceCityId;
 		}
 
-		public void setSourceCityId(Long sourceCityId) {
+		public void setSourceCityId(long sourceCityId) {
 			this.sourceCityId = sourceCityId;
 		}
 
-		public Long getDestinationCityId() {
+		public long getDestinationCityId() {
 			return destinationCityId;
 		}
 
-		public void setDestinationCityId(Long destinationCityId) {
+		public void setDestinationCityId(long destinationCityId) {
 			this.destinationCityId = destinationCityId;
 		}
 
