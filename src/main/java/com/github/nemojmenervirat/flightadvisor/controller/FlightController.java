@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.github.nemojmenervirat.flightadvisor.UrlConstants;
-import com.github.nemojmenervirat.flightadvisor.exception.CustomException;
 import com.github.nemojmenervirat.flightadvisor.model.City;
 import com.github.nemojmenervirat.flightadvisor.model.Route;
 import com.github.nemojmenervirat.flightadvisor.payload.FlightResponse;
@@ -22,6 +21,7 @@ import com.github.nemojmenervirat.flightadvisor.payload.RouteResponse;
 import com.github.nemojmenervirat.flightadvisor.repository.CityRepository;
 import com.github.nemojmenervirat.flightadvisor.service.FlightCache;
 import com.github.nemojmenervirat.flightadvisor.service.FlightService;
+import com.github.nemojmenervirat.flightadvisor.utils.DistanceUtils;
 
 @RestController
 public class FlightController {
@@ -38,10 +38,8 @@ public class FlightController {
 	@GetMapping(UrlConstants.FLIGHT_CHEAPEST)
 	public ResponseEntity<FlightResponse> getCheapest(@RequestParam String sourceCountry, @RequestParam String sourceCity,
 			@RequestParam String destinationCountry, @RequestParam String destinationCity) {
-		City source = cityRepository.findByCountryAndName(sourceCountry, sourceCity)
-				.orElseThrow(() -> new CustomException("City " + sourceCity + " in " + sourceCountry + " not found!"));
-		City destination = cityRepository.findByCountryAndName(destinationCountry, destinationCity)
-				.orElseThrow(() -> new CustomException("City " + destinationCity + " in " + destinationCountry + " not found!"));
+		City source = cityRepository.findByCountryAndNameOrThrow(sourceCountry, sourceCity);
+		City destination = cityRepository.findByCountryAndNameOrThrow(destinationCountry, destinationCity);
 		FlightResponse cachedResponse = flightCache.get(source.getCityId(), destination.getCityId());
 		if (cachedResponse != null) {
 			log.info("Returning from cache.");
@@ -54,14 +52,21 @@ public class FlightController {
 		FlightResponse response = new FlightResponse();
 		response.setRoutes(new LinkedList<>());
 		response.setPrice(BigDecimal.ZERO);
+		response.setDistance(BigDecimal.ZERO);
+		response.setDuration(BigDecimal.ZERO);
 		for (Route route : routes) {
-			response.setPrice(response.getPrice().add(route.getPrice()));
-			RouteResponse rr = new RouteResponse();
-			rr.setAirline(route.getAirline());
-			rr.setSourceCity(route.getSourceCity().toString());
-			rr.setDestinationCity(route.getDestinationCity().toString());
-			rr.setPrice(route.getPrice());
-			response.getRoutes().add(rr);
+			RouteResponse routeResponse = new RouteResponse();
+			routeResponse.setAirline(route.getAirline());
+			routeResponse.setSourceCity(route.getSourceCity().toString());
+			routeResponse.setDestinationCity(route.getDestinationCity().toString());
+			routeResponse.setPrice(route.getPrice());
+			routeResponse.setDistance(DistanceUtils.calclulateDistanceBetweenTwoAirports(route.getSourceAirport(), route.getDestinationAirport()));
+			routeResponse.setDuration(DistanceUtils.calculateDuration(routeResponse.getDistance()));
+			response.getRoutes().add(routeResponse);
+
+			response.setPrice(response.getPrice().add(routeResponse.getPrice()));
+			response.setDistance(response.getDistance().add(routeResponse.getDistance()));
+			response.setDuration(response.getDuration().add(routeResponse.getDuration()));
 		}
 		flightCache.add(source.getCityId(), destination.getCityId(), response);
 		return ResponseEntity.ok(response);

@@ -8,7 +8,8 @@ public class FlightResponse {
 	private List<RouteResponse> routes;
 
 	private BigDecimal price;
-	private BigDecimal length;
+	private BigDecimal distance;
+	private BigDecimal duration;
 
 	public List<RouteResponse> getRoutes() {
 		return routes;
@@ -26,12 +27,20 @@ public class FlightResponse {
 		this.price = price;
 	}
 
-	public BigDecimal getLength() {
-		return length;
+	public BigDecimal getDistance() {
+		return distance;
 	}
 
-	public void setLength(BigDecimal length) {
-		this.length = length;
+	public void setDistance(BigDecimal distance) {
+		this.distance = distance;
+	}
+
+	public BigDecimal getDuration() {
+		return duration;
+	}
+
+	public void setDuration(BigDecimal duration) {
+		this.duration = duration;
 	}
 
 }

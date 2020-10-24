@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.github.nemojmenervirat.flightadvisor.exception.CustomException;
 import com.github.nemojmenervirat.flightadvisor.model.City;
 import com.github.nemojmenervirat.flightadvisor.model.Comment;
 
@@ -22,4 +23,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
 		return findAllByCityOrderByModifiedDesc(city, pageable).get().collect(Collectors.toList());
 	}
 
+	default Comment findByIdOrThrow(Long commentId) {
+		return findById(commentId).orElseThrow(() -> new CustomException("Comment with id " + commentId + " not found!"));
+	}
 }

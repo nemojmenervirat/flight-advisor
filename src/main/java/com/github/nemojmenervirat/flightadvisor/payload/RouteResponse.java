@@ -8,6 +8,8 @@ public class RouteResponse {
 	private String sourceCity;
 	private String destinationCity;
 	private BigDecimal price;
+	private BigDecimal distance;
+	private BigDecimal duration;
 
 	public String getAirline() {
 		return airline;
@@ -39,6 +41,22 @@ public class RouteResponse {
 
 	public void setPrice(BigDecimal price) {
 		this.price = price;
+	}
+
+	public BigDecimal getDistance() {
+		return distance;
+	}
+
+	public void setDistance(BigDecimal distance) {
+		this.distance = distance;
+	}
+
+	public BigDecimal getDuration() {
+		return duration;
+	}
+
+	public void setDuration(BigDecimal duration) {
+		this.duration = duration;
 	}
 
 }

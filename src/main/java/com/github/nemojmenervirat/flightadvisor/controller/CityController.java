@@ -79,42 +79,35 @@ public class CityController {
 	}
 
 	@PostMapping(UrlConstants.CITY_COMMENTS)
-	public void addComment(@PathVariable Long cityId, @RequestBody Comment comment) {
-		cityRepository.findById(cityId).ifPresent(city -> {
-			comment.setModified(LocalDateTime.now());
-			comment.setCreated(comment.getModified());
-			comment.setCity(city);
-			comment.setAppUser(SecurityUtils.getAppUser());
-			commentRepository.save(comment);
-		});
+	public void addComment(@PathVariable Long cityId, @RequestBody String description) {
+		City city = cityRepository.findByIdOrThrow(cityId);
+		Comment comment = new Comment();
+		comment.setDescription(description);
+		comment.setModified(LocalDateTime.now());
+		comment.setCreated(comment.getModified());
+		comment.setCity(city);
+		comment.setAppUser(SecurityUtils.getAppUser());
+		commentRepository.save(comment);
 	}
 
 	@PutMapping(UrlConstants.CITY_COMMENT)
 	public void updateComment(@PathVariable Long cityId, @PathVariable Long commentId, @RequestBody String description) {
-		commentRepository.findById(commentId).ifPresent(comment -> {
-			if (comment.getCity().getCityId() != cityId) {
-				throw new RuntimeException("");
-			}
-			if (!comment.getAppUser().equals(SecurityUtils.getAppUser())) {
-				throw new RuntimeException("");
-			}
-			comment.setModified(LocalDateTime.now());
-			comment.setDescription(description);
-			commentRepository.save(comment);
-		});
+		Comment comment = commentRepository.findByIdOrThrow(commentId);
+		if (!comment.getAppUser().equals(SecurityUtils.getAppUser())) {
+			throw new CustomException("You can update only comments you add!");
+		}
+		comment.setModified(LocalDateTime.now());
+		comment.setDescription(description);
+		commentRepository.save(comment);
 	}
 
 	@DeleteMapping(UrlConstants.CITY_COMMENT)
 	public void deleteComment(@PathVariable Long cityId, @PathVariable Long commentId) {
-		commentRepository.findById(commentId).ifPresent(comment -> {
-			if (comment.getCity().getCityId() != cityId) {
-				throw new RuntimeException("");
-			}
-			if (!comment.getAppUser().equals(SecurityUtils.getAppUser())) {
-				throw new RuntimeException("");
-			}
-			commentRepository.delete(comment);
-		});
+		Comment comment = commentRepository.findByIdOrThrow(commentId);
+		if (!comment.getAppUser().equals(SecurityUtils.getAppUser())) {
+			throw new CustomException("You can delete only comments you add!");
+		}
+		commentRepository.delete(comment);
 	}
 
 }
