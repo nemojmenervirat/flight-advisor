@@ -1,7 +1,7 @@
 package com.github.nemojmenervirat.flightadvisor.security;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -12,11 +12,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
@@ -48,17 +50,20 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 	private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
 		log.info("GET AUTHENTICATION");
 		String token = request.getHeader(SecurityConstants.HEADER_STRING);
+		log.info(token);
 
 		if (token != null) {
-			// parse the token.
-			String user = JWT.require(Algorithm.HMAC512(SecurityConstants.SECRET.getBytes()))
-					.build()
-					.verify(token.replace(SecurityConstants.TOKEN_PREFIX, ""))
-					.getSubject();
 
-			if (user != null) {
-				// new arraylist means authorities
-				return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+			DecodedJWT decoded = JWT.require(Algorithm.HMAC512(SecurityConstants.SECRET.getBytes()))
+					.build()
+					.verify(token.replace(SecurityConstants.TOKEN_PREFIX, ""));
+
+			String username = decoded.getSubject();
+			String role = decoded.getClaim(Role.class.getName()).asString();
+			log.info("User " + username + " Role " + role);
+
+			if (username != null) {
+				return new UsernamePasswordAuthenticationToken(username, null, Arrays.asList(new SimpleGrantedAuthority(role)));
 			}
 
 			return null;

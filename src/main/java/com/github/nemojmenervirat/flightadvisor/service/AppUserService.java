@@ -1,6 +1,5 @@
 package com.github.nemojmenervirat.flightadvisor.service;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,8 +34,9 @@ public class AppUserService {
 		appUserRepository.save(appUser);
 	}
 
-	public List<AppUser> getAll() {
-		return appUserRepository.findAll();
+	public String getSaltedPassword(String username, String password) {
+		AppUser appUser = appUserRepository.findOneByUsernameIgnoreCase(username).orElseThrow(() -> new CustomException("User not found"));
+		return password + appUser.getSalt();
 	}
 
 }

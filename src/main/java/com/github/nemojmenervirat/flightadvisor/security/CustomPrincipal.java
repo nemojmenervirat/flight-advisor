@@ -16,7 +16,7 @@ public class CustomPrincipal implements UserDetails {
 
 	private CustomPrincipal(AppUser appUser) {
 		this.appUser = appUser;
-		this.authorities = Arrays.asList(new SimpleGrantedAuthority(appUser.getRole().name()));
+		this.authorities = Arrays.asList(new SimpleGrantedAuthority(appUser.getRole().getValue()));
 	}
 
 	public static CustomPrincipal create(AppUser appUser) {

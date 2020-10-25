@@ -22,17 +22,20 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.nemojmenervirat.flightadvisor.controller.UrlConstants;
 import com.github.nemojmenervirat.flightadvisor.payload.LoginRequest;
+import com.github.nemojmenervirat.flightadvisor.service.AppUserService;
 
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private AuthenticationManager authenticationManager;
+	private AppUserService appUserService;
 
-	public JWTAuthenticationFilter(AuthenticationManager authenticationManager) {
+	public JWTAuthenticationFilter(AuthenticationManager authenticationManager, AppUserService appUserService) {
 		log.info("CONSTRUCTOR");
 
 		this.authenticationManager = authenticationManager;
+		this.appUserService = appUserService;
 
 		setFilterProcessesUrl(UrlConstants.LOGIN);
 	}
@@ -43,10 +46,12 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 		try {
 			LoginRequest loginRequest = new ObjectMapper().readValue(req.getInputStream(), LoginRequest.class);
 
+			log.info("LoginRequest " + loginRequest.getUsername() + " " + loginRequest.getPassword());
+
 			return authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(
 							loginRequest.getUsername(),
-							loginRequest.getPassword(),
+							appUserService.getSaltedPassword(loginRequest.getUsername(), loginRequest.getPassword()),
 							new ArrayList<>()));
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -56,14 +61,14 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 	@Override
 	protected void successfulAuthentication(HttpServletRequest req, HttpServletResponse res, FilterChain chain, Authentication auth) throws IOException {
 		log.info("SUCCESSFUL AUTHENTICATION");
+		CustomPrincipal userDetails = (CustomPrincipal) auth.getPrincipal();
 		String token = JWT.create()
-				.withSubject(((CustomPrincipal) auth.getPrincipal()).getUsername())
+				.withSubject(userDetails.getUsername())
+				.withClaim(Role.class.getName(), userDetails.getAppUser().getRole().getValue())
 				.withExpiresAt(Timestamp.valueOf(LocalDateTime.now().plusMinutes(SecurityConstants.EXPIRATION_TIME_MINUTES)))
 				.sign(Algorithm.HMAC512(SecurityConstants.SECRET.getBytes()));
 
-		String body = ((CustomPrincipal) auth.getPrincipal()).getUsername() + " " + token;
-
-		res.getWriter().write(body);
+		res.getWriter().write(token);
 		res.getWriter().flush();
 	}
 }
