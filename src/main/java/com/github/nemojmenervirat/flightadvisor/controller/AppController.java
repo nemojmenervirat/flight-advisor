@@ -31,18 +31,24 @@ public class AppController {
 	@ResponseBody
 	public String index() {
 		//@formatter:off
-		return "<html>"
-				+ "<header>"
-					+ "<title>Flight Advisor</title>"
-				+ "</header>"
-				+ "<body>Detailed information about API can be found "
-					+ "<a href='https://github.com/nemojmenervirat/flight-advisor'>here.</a>" + 
-				" </body>"
-			+ "</html>";
+		return "<html>" +
+			       "<header>" +
+			           "<title>Flight Advisor</title>" +
+				   "</header>" +
+			           
+				   "<body>" +
+				       "<h3>Detailed information about API can be found " +
+					       "<a href='/swagger-ui.html'>here.</a>" +
+					   "</h3>" +
+					   "<h3>Project information can be found " +
+					       "<a href='https://github.com/nemojmenervirat/flight-advisor'>here.</a>" +
+					   "</h3>" +
+				   "</body>" +
+			   "</html>";
 		//@formatter:on
 	}
 
-	@PostMapping("/reset")
+	@PostMapping("/app/reset")
 	public void reset() {
 		routeRepository.deleteAll();
 		airportRepository.deleteAll();

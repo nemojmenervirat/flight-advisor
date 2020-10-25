@@ -1,4 +1,4 @@
-package com.github.nemojmenervirat.flightadvisor;
+package com.github.nemojmenervirat.flightadvisor.controller;
 
 public class UrlConstants {
 

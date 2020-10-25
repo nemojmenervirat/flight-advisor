@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.github.nemojmenervirat.flightadvisor.UrlConstants;
 import com.github.nemojmenervirat.flightadvisor.exception.CustomException;
 import com.github.nemojmenervirat.flightadvisor.model.Airport;
 import com.github.nemojmenervirat.flightadvisor.service.AirportService;

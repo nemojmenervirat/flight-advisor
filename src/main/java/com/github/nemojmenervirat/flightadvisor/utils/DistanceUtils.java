@@ -7,6 +7,15 @@ import com.github.nemojmenervirat.flightadvisor.model.Airport;
 
 public class DistanceUtils {
 
+	/**
+	 * Calculates distance between two airports
+	 * 
+	 * @param a
+	 *            Airport A
+	 * @param b
+	 *            Airport B
+	 * @return Distance between A and B in miles rounded to 2 decimal places
+	 */
 	public static BigDecimal calclulateDistanceBetweenTwoAirports(Airport a, Airport b) {
 		double aLongitude = a.getLongitude().doubleValue();
 		double aLatitude = a.getLatitude().doubleValue();
@@ -16,12 +25,17 @@ public class DistanceUtils {
 	}
 
 	/**
+	 * Calculates distance between two locations
 	 * 
 	 * @param aLongitude
+	 *            Location A longitude
 	 * @param aLatitude
+	 *            Location A latitude
 	 * @param bLongitude
+	 *            Location B longitude
 	 * @param bLatitude
-	 * @return distance in miles
+	 *            Location B latitude
+	 * @return Distance between A and B in miles
 	 */
 	public static double calculateDistanceBetweenTwoLocations(double aLongitude, double aLatitude, double bLongitude, double bLatitude) {
 
@@ -34,6 +48,13 @@ public class DistanceUtils {
 		return ((Math.toDegrees(Math.acos(distance))) * 111.18957696) * 0.621371192;
 	}
 
+	/**
+	 * Calculates flight duration for given distance taking avg speed 500mph
+	 * 
+	 * @param distance
+	 *            Distance in miles
+	 * @return Duration in hours rounded to 2 decimal places
+	 */
 	public static BigDecimal calculateDuration(BigDecimal distance) {
 		return distance.divide(new BigDecimal(500)).setScale(2, RoundingMode.HALF_EVEN);
 	}

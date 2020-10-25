@@ -20,7 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.nemojmenervirat.flightadvisor.UrlConstants;
+import com.github.nemojmenervirat.flightadvisor.controller.UrlConstants;
 import com.github.nemojmenervirat.flightadvisor.payload.LoginRequest;
 
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
