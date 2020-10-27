@@ -17,8 +17,7 @@ import com.github.nemojmenervirat.flightadvisor.model.City;
 import com.github.nemojmenervirat.flightadvisor.model.Route;
 import com.github.nemojmenervirat.flightadvisor.payload.FlightResponse;
 import com.github.nemojmenervirat.flightadvisor.payload.RouteResponse;
-import com.github.nemojmenervirat.flightadvisor.repository.CityRepository;
-import com.github.nemojmenervirat.flightadvisor.service.FlightCache;
+import com.github.nemojmenervirat.flightadvisor.service.CityService;
 import com.github.nemojmenervirat.flightadvisor.service.FlightService;
 import com.github.nemojmenervirat.flightadvisor.utils.DistanceUtils;
 
@@ -28,18 +27,20 @@ public class FlightController {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Autowired
-	private FlightCache flightCache;
-	@Autowired
 	private FlightService flightService;
 	@Autowired
-	private CityRepository cityRepository;
+	private CityService cityService;
+	@Autowired
+	private FlightControllerCache cache;
 
 	@GetMapping(UrlConstants.FLIGHT_CHEAPEST)
 	public ResponseEntity<FlightResponse> getCheapest(@RequestParam String sourceCountry, @RequestParam String sourceCity,
 			@RequestParam String destinationCountry, @RequestParam String destinationCity) {
-		City source = cityRepository.findByCountryAndNameOrThrow(sourceCountry, sourceCity);
-		City destination = cityRepository.findByCountryAndNameOrThrow(destinationCountry, destinationCity);
-		FlightResponse cachedResponse = flightCache.get(source.getCityId(), destination.getCityId());
+
+		City source = cityService.getByCountryAndName(sourceCountry, sourceCity);
+		City destination = cityService.getByCountryAndName(destinationCountry, destinationCity);
+
+		FlightResponse cachedResponse = cache.get(source.getCityId(), destination.getCityId());
 		if (cachedResponse != null) {
 			log.info("Returning from cache.");
 			return ResponseEntity.ok(cachedResponse);
@@ -48,11 +49,18 @@ public class FlightController {
 		if (routes.isEmpty()) {
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		}
-		FlightResponse response = new FlightResponse();
-		response.setRoutes(new LinkedList<>());
-		response.setPrice(BigDecimal.ZERO);
-		response.setDistance(BigDecimal.ZERO);
-		response.setDuration(BigDecimal.ZERO);
+		FlightResponse flightResponse = map(routes);
+
+		cache.add(source.getCityId(), destination.getCityId(), flightResponse);
+		return ResponseEntity.ok(flightResponse);
+	}
+
+	private FlightResponse map(List<Route> routes) {
+		FlightResponse flightResponse = new FlightResponse();
+		flightResponse.setRoutes(new LinkedList<>());
+		flightResponse.setPrice(BigDecimal.ZERO);
+		flightResponse.setDistance(BigDecimal.ZERO);
+		flightResponse.setDuration(BigDecimal.ZERO);
 		for (Route route : routes) {
 			RouteResponse routeResponse = new RouteResponse();
 			routeResponse.setAirline(route.getAirline());
@@ -61,13 +69,12 @@ public class FlightController {
 			routeResponse.setPrice(route.getPrice());
 			routeResponse.setDistance(DistanceUtils.calclulateDistanceBetweenTwoAirports(route.getSourceAirport(), route.getDestinationAirport()));
 			routeResponse.setDuration(DistanceUtils.calculateDuration(routeResponse.getDistance()));
-			response.getRoutes().add(routeResponse);
 
-			response.setPrice(response.getPrice().add(routeResponse.getPrice()));
-			response.setDistance(response.getDistance().add(routeResponse.getDistance()));
-			response.setDuration(response.getDuration().add(routeResponse.getDuration()));
+			flightResponse.getRoutes().add(routeResponse);
+			flightResponse.setPrice(flightResponse.getPrice().add(routeResponse.getPrice()));
+			flightResponse.setDistance(flightResponse.getDistance().add(routeResponse.getDistance()));
+			flightResponse.setDuration(flightResponse.getDuration().add(routeResponse.getDuration()));
 		}
-		flightCache.add(source.getCityId(), destination.getCityId(), response);
-		return ResponseEntity.ok(response);
+		return flightResponse;
 	}
 }

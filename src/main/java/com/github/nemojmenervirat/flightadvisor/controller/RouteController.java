@@ -1,10 +1,8 @@
 package com.github.nemojmenervirat.flightadvisor.controller;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.github.nemojmenervirat.flightadvisor.exception.CustomException;
 import com.github.nemojmenervirat.flightadvisor.model.Route;
+import com.github.nemojmenervirat.flightadvisor.parsecsv.ParseItemsResult;
 import com.github.nemojmenervirat.flightadvisor.service.RouteService;
 import com.github.nemojmenervirat.flightadvisor.utils.FileUtils;
 
@@ -24,19 +23,16 @@ public class RouteController {
 
 	@GetMapping(UrlConstants.ROUTES)
 	public List<Route> get() {
-		return routeService.findAll();
+		return routeService.getAll();
 	}
 
 	@PostMapping(UrlConstants.ROUTES_IMPORT)
-	public ResponseEntity<String> upload(@RequestParam("file") MultipartFile file) {
+	public String upload(@RequestParam("file") MultipartFile file) {
 		if (!FileUtils.isTxtOrCsv(file)) {
 			throw new CustomException("Please upload .txt or .csv file!");
 		}
-		try {
-			int count = routeService.upload(file.getInputStream());
-			return ResponseEntity.ok("Successfully imported " + count + " routes.");
-		} catch (IOException ex) {
-			throw new CustomException("I/O Exception: " + ex.getMessage());
-		}
+		ParseItemsResult result = FileUtils.parseCsv(file, routeService);
+		return "Successfully imported " + result.getImported() + " routes. Ignored " + result.getIgnored() + " rows.";
+
 	}
 }

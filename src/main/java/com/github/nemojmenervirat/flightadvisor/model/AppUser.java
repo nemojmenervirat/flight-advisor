@@ -81,4 +81,12 @@ public class AppUser {
 		this.role = role;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof AppUser) {
+			return appUserId == ((AppUser) obj).appUserId;
+		}
+		return super.equals(obj);
+	}
+
 }

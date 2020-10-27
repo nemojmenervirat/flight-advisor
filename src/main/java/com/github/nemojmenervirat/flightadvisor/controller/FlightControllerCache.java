@@ -1,4 +1,4 @@
-package com.github.nemojmenervirat.flightadvisor.service;
+package com.github.nemojmenervirat.flightadvisor.controller;
 
 import java.time.LocalDateTime;
 import java.util.LinkedList;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import com.github.nemojmenervirat.flightadvisor.payload.FlightResponse;
 
 @Component
-public class FlightCache {
+public class FlightControllerCache {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
