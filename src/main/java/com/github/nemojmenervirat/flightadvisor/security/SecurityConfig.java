@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -36,30 +35,47 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Override
 	public void configure(HttpSecurity http) throws Exception {
-		String[] adminPostEndpoints = { UrlConstants.CITIES, UrlConstants.CITIES_IMPORT };
-		String[] adminDeleteEndpoints = { UrlConstants.CITY };
-		String[] userGetEndpoints = { UrlConstants.CITIES };
 		http.authorizeRequests()
-				.antMatchers(HttpMethod.POST, UrlConstants.SIGN_UP, UrlConstants.LOGIN).permitAll()
-				.antMatchers(HttpMethod.POST, adminPostEndpoints).hasAuthority(Role.ADMIN.getValue())
-				.antMatchers(HttpMethod.DELETE, adminDeleteEndpoints).hasAuthority(Role.ADMIN.getValue())
-				.antMatchers(HttpMethod.GET, userGetEndpoints).hasAuthority(Role.USER.getValue())
-				// .anyRequest().permitAll().and().csrf().disable();
+				// permit for all
+				// POST (signUp, login)
+				.antMatchers(HttpMethod.POST,
+						UrlConstants.SIGN_UP,
+						UrlConstants.LOGIN)
+				.permitAll()
+				// permit for administrator
+				// POST (addCity, importCities, importAirports, importRoutes)
+				.antMatchers(HttpMethod.POST,
+						UrlConstants.CITIES,
+						UrlConstants.CITIES_IMPORT,
+						UrlConstants.AIRPORTS_IMPORT,
+						UrlConstants.ROUTES_IMPORT)
+				.hasAuthority(Role.ADMIN.getValue())
+				// DELETE (removeCity)
+				.antMatchers(HttpMethod.DELETE,
+						UrlConstants.CITY)
+				.hasAuthority(Role.ADMIN.getValue())
+				// permit for user
+				// GET (getCities, getCheapestFlight)
+				.antMatchers(HttpMethod.GET,
+						UrlConstants.CITIES,
+						UrlConstants.FLIGHT_CHEAPEST)
+				.hasAuthority(Role.USER.getValue())
+				// POST (addComment)
+				.antMatchers(HttpMethod.POST,
+						UrlConstants.CITY_COMMENTS)
+				.hasAuthority(Role.USER.getValue())
+				// PUT (changeComment)
+				.antMatchers(HttpMethod.PUT,
+						UrlConstants.CITY_COMMENT)
+				.hasAuthority(Role.USER.getValue())
+				// DELETE (removeComment)
+				.antMatchers(HttpMethod.DELETE,
+						UrlConstants.CITY_COMMENT)
+				.hasAnyAuthority(Role.USER.getValue())
 				.and()
 				.csrf().disable()
 				.addFilter(new JWTAuthenticationFilter(authenticationManager(), appUserService))
 				.addFilter(new JWTAuthorizationFilter(authenticationManager()))
 				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 	}
-
-	@Override
-	public void configure(WebSecurity web) throws Exception {
-		web.ignoring().antMatchers("/v2/api-docs",
-				"/configuration/ui",
-				"/swagger-resources/**",
-				"/configuration/security",
-				"/swagger-ui.html",
-				"/webjars/**");
-	}
-
 }

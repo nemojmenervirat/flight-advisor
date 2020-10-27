@@ -1,6 +1,7 @@
 package com.github.nemojmenervirat.flightadvisor;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,6 +61,18 @@ public class SecurityTest {
 		city.setDescription("Lijep grad");
 		String cityJson = objectMapper.writeValueAsString(city);
 		mockMvc.perform(post(UrlConstants.CITIES).contentType(MediaType.APPLICATION_JSON).content(cityJson)).andExpect(status().isOk());
+	}
+
+	@WithMockUser(username = "admin", roles = "ADMIN")
+	@Test
+	public void adminGetCities_expectFail403() throws Exception {
+		mockMvc.perform(get(UrlConstants.CITIES)).andExpect(status().isForbidden());
+	}
+
+	@WithMockUser(username = "user", roles = "USER")
+	@Test
+	public void userGetCities_expectSuccess200() throws Exception {
+		mockMvc.perform(get(UrlConstants.CITIES)).andExpect(status().isOk());
 	}
 
 }
