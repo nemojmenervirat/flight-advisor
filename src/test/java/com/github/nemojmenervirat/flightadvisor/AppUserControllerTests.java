@@ -78,7 +78,6 @@ class AppUserControllerTests {
 		signUpRequest.setUsername("milan");
 		signUpRequest.setPassword("milan");
 		String signUpRequestJson = objectMapper.writeValueAsString(signUpRequest);
-		System.out.println("SIGN UP REQUEST JSON = " + signUpRequestJson);
 		mockMvc.perform(post(UrlConstants.SIGN_UP).contentType(MediaType.APPLICATION_JSON).content(signUpRequestJson)).andExpect(status().isOk());
 	}
 }

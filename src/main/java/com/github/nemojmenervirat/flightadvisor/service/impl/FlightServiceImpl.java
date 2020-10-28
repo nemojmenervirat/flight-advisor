@@ -6,8 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +18,11 @@ import com.github.nemojmenervirat.flightadvisor.repository.RouteRepository;
 import com.github.nemojmenervirat.flightadvisor.service.FlightService;
 import com.github.nemojmenervirat.flightadvisor.service.FlightServiceCache;
 import com.github.nemojmenervirat.flightadvisor.utils.DistanceUtils;
+import com.github.nemojmenervirat.flightadvisor.utils.Graph;
 import com.github.nemojmenervirat.flightadvisor.utils.Node;
 
 @Service
 class FlightServiceImpl implements FlightService {
-
-	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Autowired
 	private RouteRepository routeRepository;
@@ -42,34 +39,31 @@ class FlightServiceImpl implements FlightService {
 
 		FlightResponse cachedResponse = cache.getFlightResponse(sourceCity.getCityId(), destinationCity.getCityId());
 		if (cachedResponse != null) {
-			log.info("Returning cached response.");
 			return cachedResponse;
 		}
-		if (cache.getGraph() == null) {
-			List<City> cities = cityRepository.findAll();
-			List<Route> routes = routeRepository.findAllByOrderBySourceAirport_CityAscDestinationAirport_CityAsc();
-			createNodes(cities, routes);
-			log.info("Creating graph.");
-		} else {
-			cache.getGraph().resetDistances();
-			log.info("Reseting distances.");
-		}
-		Node sourceNode = cache.getGraph().get(sourceCity);
+
+		List<City> cities = cityRepository.findAll();
+		List<Route> routes = routeRepository.findAllByOrderBySourceAirport_CityAscDestinationAirport_CityAsc();
+		Graph graph = createGraph(cities, routes);
+
+		Node sourceNode = graph.get(sourceCity);
 		if (sourceNode == null) {
 			return null;
 		}
-		cache.getGraph().calculateShortestPath(sourceNode);
-		Node destinationNode = cache.getGraph().get(destinationCity);
+
+		graph.calculateShortestPath(sourceNode);
+
+		Node destinationNode = graph.get(destinationCity);
 		if (destinationNode == null) {
 			return null;
 		}
-		List<Route> routes = destinationNode.getShortestPath();
-
-		if (routes.isEmpty()) {
+		if (destinationNode.getShortestPath().isEmpty()) {
 			return null;
 		}
-		FlightResponse flightResponse = map(routes);
+		FlightResponse flightResponse = map(destinationNode.getShortestPath());
+
 		cache.addFlightResponse(sourceCity.getCityId(), destinationCity.getCityId(), flightResponse);
+
 		return flightResponse;
 	}
 
@@ -77,12 +71,10 @@ class FlightServiceImpl implements FlightService {
 		return r1.getPrice().compareTo(r2.getPrice());
 	}
 
-	private void createNodes(List<City> cities, List<Route> routes) {
-		List<Node> nodes = new LinkedList<>();
+	private Graph createGraph(List<City> cities, List<Route> routes) {
 		Map<City, Node> cityNodeMap = new HashMap<>();
 		for (City city : cities) {
 			Node node = new Node(city);
-			nodes.add(node);
 			cityNodeMap.put(city, node);
 		}
 		Node sourceNode = null;
@@ -100,7 +92,7 @@ class FlightServiceImpl implements FlightService {
 				sourceNode.addDestination(destinationNode, route);
 			}
 		}
-		cache.createGraph(nodes, cityNodeMap);
+		return new Graph(cityNodeMap);
 	}
 
 	private FlightResponse map(List<Route> routes) {

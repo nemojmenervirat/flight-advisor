@@ -3,7 +3,6 @@ package com.github.nemojmenervirat.flightadvisor.utils;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -14,24 +13,14 @@ import com.github.nemojmenervirat.flightadvisor.model.Route;
 
 public class Graph {
 
-	private List<Node> nodes;;
-	private Map<City, Node> cityNodeMap;;
+	private Map<City, Node> cityNodeMap;
 
-	public Graph(List<Node> nodes, Map<City, Node> cityNodeMap) {
-		this.nodes = Objects.requireNonNull(nodes);
+	public Graph(Map<City, Node> cityNodeMap) {
 		this.cityNodeMap = Objects.requireNonNull(cityNodeMap);
-	}
-
-	public void resetDistances() {
-		nodes.forEach(node -> node.setDistance(Integer.MAX_VALUE));
 	}
 
 	public Node get(City city) {
 		return cityNodeMap.get(city);
-	}
-
-	private static Integer getDistance(Route route) {
-		return route.getPrice().multiply(new BigDecimal(100)).intValue();
 	}
 
 	public void calculateShortestPath(Node source) {
@@ -54,6 +43,10 @@ public class Graph {
 			}
 			settledNodes.add(currentNode);
 		}
+	}
+
+	private static Integer getDistance(Route route) {
+		return route.getPrice().multiply(new BigDecimal(100)).intValue();
 	}
 
 	private Node getLowestDistanceNode(Set<Node> unsettledNodes) {
