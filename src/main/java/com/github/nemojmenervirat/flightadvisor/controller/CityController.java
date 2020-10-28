@@ -16,8 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.github.nemojmenervirat.flightadvisor.exception.CustomException;
-import com.github.nemojmenervirat.flightadvisor.model.City;
 import com.github.nemojmenervirat.flightadvisor.parsecsv.ParseItemsResult;
+import com.github.nemojmenervirat.flightadvisor.payload.CityRequest;
+import com.github.nemojmenervirat.flightadvisor.payload.CityResponse;
 import com.github.nemojmenervirat.flightadvisor.service.CityService;
 import com.github.nemojmenervirat.flightadvisor.utils.FileUtils;
 
@@ -28,13 +29,13 @@ public class CityController {
 	private CityService cityService;
 
 	@GetMapping(UrlConstants.CITIES)
-	public List<City> get(@RequestParam(required = false) String name, @RequestParam(required = false) Integer limitComments) {
+	public List<CityResponse> get(@RequestParam(required = false) String name, @RequestParam(required = false) Integer limitComments) {
 		return cityService.getByNameLimitComments(name, limitComments);
 	}
 
 	@PostMapping(UrlConstants.CITIES)
-	public void add(@RequestBody @Valid City city) {
-		cityService.add(city);
+	public void add(@RequestBody @Valid CityRequest request) {
+		cityService.add(request);
 	}
 
 	@PostMapping(UrlConstants.CITIES_IMPORT)

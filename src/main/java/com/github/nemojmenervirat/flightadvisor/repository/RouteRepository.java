@@ -8,6 +8,6 @@ import com.github.nemojmenervirat.flightadvisor.model.Route;
 
 public interface RouteRepository extends JpaRepository<Route, Long> {
 
-	List<Route> findAllByOrderBySourceCityAscDestinationCityAsc();
+	List<Route> findAllByOrderBySourceAirport_CityAscDestinationAirport_CityAsc();
 
 }

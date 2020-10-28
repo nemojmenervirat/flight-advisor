@@ -1,25 +1,31 @@
-package com.github.nemojmenervirat.flightadvisor.controller;
+package com.github.nemojmenervirat.flightadvisor.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.github.nemojmenervirat.flightadvisor.model.City;
 import com.github.nemojmenervirat.flightadvisor.payload.FlightResponse;
+import com.github.nemojmenervirat.flightadvisor.service.FlightServiceCache;
+import com.github.nemojmenervirat.flightadvisor.utils.Graph;
+import com.github.nemojmenervirat.flightadvisor.utils.Node;
 
 @Component
-public class FlightControllerCache {
+class FlightServiceCacheImpl implements FlightServiceCache {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private static final int CACHE_SIZE = 100;
 	private static final int EXPIRATION_TIME_MINUTES = 30;
 	private List<FlightCacheItem> flightCacheItems = new LinkedList<>();
+	private Graph graph;
 
-	public synchronized FlightResponse get(long sourceCityId, long destinationCityId) {
+	public synchronized FlightResponse getFlightResponse(long sourceCityId, long destinationCityId) {
 		log.info("Searching cache for {" + sourceCityId + ", " + destinationCityId + "}");
 		FlightCacheItem flightCacheItem = flightCacheItems.stream()
 				.filter(item -> item.getSourceCityId() == sourceCityId
@@ -37,7 +43,7 @@ public class FlightControllerCache {
 		return null;
 	}
 
-	public synchronized void add(long sourceCityId, long destinationCityId, FlightResponse flightResponse) {
+	public synchronized void addFlightResponse(long sourceCityId, long destinationCityId, FlightResponse flightResponse) {
 		log.info("Adding to cache {" + sourceCityId + ", " + destinationCityId + ", " + flightResponse.getPrice() + "}");
 		if (flightCacheItems.size() >= CACHE_SIZE) {
 			boolean removed = flightCacheItems.removeIf(item -> item.getModified().isBefore(LocalDateTime.now().minusMinutes(EXPIRATION_TIME_MINUTES)));
@@ -103,6 +109,22 @@ public class FlightControllerCache {
 			this.modified = modified;
 		}
 
+	}
+
+	@Override
+	public synchronized void clear() {
+		flightCacheItems.clear();
+		graph = null;
+	}
+
+	@Override
+	public Graph getGraph() {
+		return graph;
+	}
+
+	@Override
+	public void createGraph(List<Node> nodes, Map<City, Node> cityNodeMap) {
+		graph = new Graph(nodes, cityNodeMap);
 	}
 
 }

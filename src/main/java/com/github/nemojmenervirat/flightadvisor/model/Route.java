@@ -16,6 +16,7 @@ public class Route {
 	@Id
 	@GeneratedValue
 	private Long routeId;
+
 	private String airline;
 	private Long airlineId;
 
@@ -24,16 +25,8 @@ public class Route {
 	private Airport sourceAirport;
 
 	@ManyToOne
-	@JoinColumn(name = "city_id_source")
-	private City sourceCity;
-
-	@ManyToOne
 	@JoinColumn(name = "airport_id_destination")
 	private Airport destinationAirport;
-
-	@ManyToOne
-	@JoinColumn(name = "city_id_destination")
-	private City destinationCity;
 
 	private BigDecimal price;
 
@@ -78,19 +71,11 @@ public class Route {
 	}
 
 	public City getSourceCity() {
-		return sourceCity;
-	}
-
-	public void setSourceCity(City sourceCity) {
-		this.sourceCity = sourceCity;
+		return sourceAirport.getCity();
 	}
 
 	public City getDestinationCity() {
-		return destinationCity;
-	}
-
-	public void setDestinationCity(City destinationCity) {
-		this.destinationCity = destinationCity;
+		return destinationAirport.getCity();
 	}
 
 	public BigDecimal getPrice() {

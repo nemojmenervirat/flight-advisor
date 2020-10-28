@@ -2,12 +2,9 @@ package com.github.nemojmenervirat.flightadvisor.service.impl;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +13,14 @@ import org.springframework.stereotype.Service;
 
 import com.github.nemojmenervirat.flightadvisor.model.City;
 import com.github.nemojmenervirat.flightadvisor.model.Route;
+import com.github.nemojmenervirat.flightadvisor.payload.FlightResponse;
+import com.github.nemojmenervirat.flightadvisor.payload.RouteResponse;
 import com.github.nemojmenervirat.flightadvisor.repository.CityRepository;
 import com.github.nemojmenervirat.flightadvisor.repository.RouteRepository;
 import com.github.nemojmenervirat.flightadvisor.service.FlightService;
+import com.github.nemojmenervirat.flightadvisor.service.FlightServiceCache;
+import com.github.nemojmenervirat.flightadvisor.utils.DistanceUtils;
+import com.github.nemojmenervirat.flightadvisor.utils.Node;
 
 @Service
 class FlightServiceImpl implements FlightService {
@@ -29,28 +31,59 @@ class FlightServiceImpl implements FlightService {
 	private RouteRepository routeRepository;
 	@Autowired
 	private CityRepository cityRepository;
+	@Autowired
+	private FlightServiceCache cache;
 
-	public List<Route> getCheapestRoute(City sourceCity, City destinationCity) {
-		log.info("Finding cheapest route");
-		List<City> cities = cityRepository.findAll();
-		List<Route> routes = routeRepository.findAllByOrderBySourceCityAscDestinationCityAsc();
-		List<Node> nodes = createNodes(cities, routes);
-		Node sourceNode = nodeMap.get(sourceCity);
-		calculateShortestPath(nodes, sourceNode);
-		Node destinationNode = nodeMap.get(destinationCity);
-		return destinationNode.getShortestPath();
+	@Override
+	public FlightResponse getCheapestRoute(String sourceCountry, String sourceCity, String destinationCountry, String destinationCity) {
+
+		City source = cityRepository.findByCountryAndNameOrThrow(sourceCountry, sourceCity);
+		City destination = cityRepository.findByCountryAndNameOrThrow(destinationCountry, destinationCity);
+
+		FlightResponse cachedResponse = cache.getFlightResponse(source.getCityId(), destination.getCityId());
+		if (cachedResponse != null) {
+			log.info("Returning cached response.");
+			return cachedResponse;
+		}
+		if (cache.getGraph() == null) {
+			List<City> cities = cityRepository.findAll();
+			List<Route> routes = routeRepository.findAllByOrderBySourceAirport_CityAscDestinationAirport_CityAsc();
+			createNodes(cities, routes);
+			log.info("Creating graph.");
+		} else {
+			cache.getGraph().resetDistances();
+			log.info("Reseting distances.");
+		}
+		Node sourceNode = cache.getGraph().get(source);
+		if (sourceNode == null) {
+			return null;
+		}
+		cache.getGraph().calculateShortestPath(sourceNode);
+		Node destinationNode = cache.getGraph().get(destination);
+		if (destinationNode == null) {
+			return null;
+		}
+		List<Route> routes = destinationNode.getShortestPath();
+
+		if (routes.isEmpty()) {
+			return null;
+		}
+		FlightResponse flightResponse = map(routes);
+		cache.addFlightResponse(source.getCityId(), destination.getCityId(), flightResponse);
+		return flightResponse;
 	}
 
-	List<Node> nodes = new LinkedList<>();
-	Map<City, Node> nodeMap = new HashMap<>();
+	private int compare(Route r1, Route r2) {
+		return r1.getPrice().compareTo(r2.getPrice());
+	}
 
-	private List<Node> createNodes(List<City> cities, List<Route> routes) {
-		nodes.clear();
-		nodeMap.clear();
+	private void createNodes(List<City> cities, List<Route> routes) {
+		List<Node> nodes = new LinkedList<>();
+		Map<City, Node> cityNodeMap = new HashMap<>();
 		for (City city : cities) {
 			Node node = new Node(city);
 			nodes.add(node);
-			nodeMap.put(city, node);
+			cityNodeMap.put(city, node);
 		}
 		Node sourceNode = null;
 		Node destinationNode = null;
@@ -62,112 +95,35 @@ class FlightServiceImpl implements FlightService {
 					sourceNode.addDestination(destinationNode, route);
 				}
 			} else {
-				sourceNode = nodeMap.get(route.getSourceCity());
-				destinationNode = nodeMap.get(route.getDestinationCity());
+				sourceNode = cityNodeMap.get(route.getSourceCity());
+				destinationNode = cityNodeMap.get(route.getDestinationCity());
 				sourceNode.addDestination(destinationNode, route);
 			}
 		}
-		return nodes;
+		cache.createGraph(nodes, cityNodeMap);
 	}
 
-	class Node {
-		private City city;
-		private List<Route> shortestPath = new LinkedList<>();
-		private Integer distance = Integer.MAX_VALUE;
-		private Map<Node, Route> adjacentNodes = new HashMap<>();
+	private FlightResponse map(List<Route> routes) {
+		FlightResponse flightResponse = new FlightResponse();
+		flightResponse.setRoutes(new LinkedList<>());
+		flightResponse.setPrice(BigDecimal.ZERO);
+		flightResponse.setDistance(BigDecimal.ZERO);
+		flightResponse.setDuration(BigDecimal.ZERO);
+		for (Route route : routes) {
+			RouteResponse routeResponse = new RouteResponse();
+			routeResponse.setAirline(route.getAirline());
+			routeResponse.setSourceCity(route.getSourceCity().toString());
+			routeResponse.setDestinationCity(route.getDestinationCity().toString());
+			routeResponse.setPrice(route.getPrice());
+			routeResponse.setDistance(DistanceUtils.calclulateDistanceBetweenTwoAirports(route.getSourceAirport(), route.getDestinationAirport()));
+			routeResponse.setDuration(DistanceUtils.calculateDuration(routeResponse.getDistance()));
 
-		public void addDestination(Node destination, Route route) {
-			adjacentNodes.put(destination, route);
+			flightResponse.getRoutes().add(routeResponse);
+			flightResponse.setPrice(flightResponse.getPrice().add(routeResponse.getPrice()));
+			flightResponse.setDistance(flightResponse.getDistance().add(routeResponse.getDistance()));
+			flightResponse.setDuration(flightResponse.getDuration().add(routeResponse.getDuration()));
 		}
-
-		public Node(City city) {
-			this.city = city;
-		}
-
-		public City getCity() {
-			return city;
-		}
-
-		public void setCity(City city) {
-			this.city = city;
-		}
-
-		public List<Route> getShortestPath() {
-			return shortestPath;
-		}
-
-		public void setShortestPath(List<Route> shortestPath) {
-			this.shortestPath = shortestPath;
-		}
-
-		public Integer getDistance() {
-			return distance;
-		}
-
-		public void setDistance(Integer distance) {
-			this.distance = distance;
-		}
-
-		public Map<Node, Route> getAdjacentNodes() {
-			return adjacentNodes;
-		}
-
-		public void setAdjacentNodes(Map<Node, Route> adjacentNodes) {
-			this.adjacentNodes = adjacentNodes;
-		}
-
+		return flightResponse;
 	}
 
-	private int compare(Route r1, Route r2) {
-		return r1.getPrice().compareTo(r2.getPrice());
-	}
-
-	private Integer getDistance(Route route) {
-		return route.getPrice().multiply(new BigDecimal(100)).intValue();
-	}
-
-	private void calculateShortestPath(List<Node> nodes, Node source) {
-		source.setDistance(0);
-
-		Set<Node> settledNodes = new HashSet<>();
-		Set<Node> unsettledNodes = new HashSet<>();
-
-		unsettledNodes.add(source);
-
-		while (unsettledNodes.size() != 0) {
-			Node currentNode = getLowestDistanceNode(unsettledNodes);
-			unsettledNodes.remove(currentNode);
-			for (Entry<Node, Route> adjacencyPair : currentNode.getAdjacentNodes().entrySet()) {
-				Node adjacentNode = adjacencyPair.getKey();
-				if (!settledNodes.contains(adjacentNode)) {
-					calculateMinimumDistance(adjacentNode, adjacencyPair.getValue(), currentNode);
-					unsettledNodes.add(adjacentNode);
-				}
-			}
-			settledNodes.add(currentNode);
-		}
-	}
-
-	private Node getLowestDistanceNode(Set<Node> unsettledNodes) {
-		Node lowestDistanceNode = null;
-		Integer lowestDistance = Integer.MAX_VALUE;
-		for (Node node : unsettledNodes) {
-			Integer nodeDistance = node.getDistance();
-			if (nodeDistance < lowestDistance) {
-				lowestDistance = nodeDistance;
-				lowestDistanceNode = node;
-			}
-		}
-		return lowestDistanceNode;
-	}
-
-	private void calculateMinimumDistance(Node evaluationNode, Route route, Node sourceNode) {
-		Integer edgeWeight = getDistance(route);
-		if (sourceNode.getDistance() + edgeWeight < evaluationNode.getDistance()) {
-			evaluationNode.setDistance(sourceNode.getDistance() + edgeWeight);
-			LinkedList<Route> shortestPath = new LinkedList<>(sourceNode.getShortestPath());
-			shortestPath.add(route);
-			evaluationNode.setShortestPath(shortestPath);
-		}
-	}
 }

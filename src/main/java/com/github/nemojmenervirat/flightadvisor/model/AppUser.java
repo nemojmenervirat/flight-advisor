@@ -16,12 +16,19 @@ public class AppUser {
 	@Id
 	@GeneratedValue
 	private Long appUserId;
-	@Column(unique = true)
+
+	@Column(unique = true, length = 20)
 	private String username;
+
 	private String passwordHash;
 	private String salt;
+
+	@Column(length = 20)
 	private String firstName;
+
+	@Column(length = 20)
 	private String lastName;
+
 	@Enumerated
 	private Role role;
 

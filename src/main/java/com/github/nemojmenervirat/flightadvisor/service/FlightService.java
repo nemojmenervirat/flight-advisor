@@ -1,12 +1,9 @@
 package com.github.nemojmenervirat.flightadvisor.service;
 
-import java.util.List;
-
-import com.github.nemojmenervirat.flightadvisor.model.City;
-import com.github.nemojmenervirat.flightadvisor.model.Route;
+import com.github.nemojmenervirat.flightadvisor.payload.FlightResponse;
 
 public interface FlightService {
 
-	public List<Route> getCheapestRoute(City source, City destination);
+	public FlightResponse getCheapestRoute(String sourceCountry, String sourceCity, String destinationCountry, String destinationCity);
 
 }

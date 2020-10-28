@@ -2,13 +2,13 @@ package com.github.nemojmenervirat.flightadvisor.model;
 
 import java.util.List;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotEmpty;
 
 @Entity
 @Table(uniqueConstraints = {
@@ -19,11 +19,14 @@ public class City {
 	@Id
 	@GeneratedValue
 	private Long cityId;
-	@NotEmpty
+
+	@Column(length = 50)
 	private String name;
-	@NotEmpty
+
+	@Column(length = 50)
 	private String country;
-	@NotEmpty
+
+	@Column(length = 250)
 	private String description;
 
 	@Transient

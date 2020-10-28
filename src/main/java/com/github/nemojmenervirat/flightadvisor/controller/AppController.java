@@ -12,6 +12,7 @@ import com.github.nemojmenervirat.flightadvisor.repository.AppUserRepository;
 import com.github.nemojmenervirat.flightadvisor.repository.CityRepository;
 import com.github.nemojmenervirat.flightadvisor.repository.CommentRepository;
 import com.github.nemojmenervirat.flightadvisor.repository.RouteRepository;
+import com.github.nemojmenervirat.flightadvisor.service.FlightServiceCache;
 
 @RestController
 public class AppController {
@@ -26,6 +27,8 @@ public class AppController {
 	private CommentRepository commentRepository;
 	@Autowired
 	private AppUserRepository appUserRepository;
+	@Autowired
+	private FlightServiceCache flightServiceCache;
 
 	@GetMapping(value = "/", produces = MediaType.TEXT_HTML_VALUE)
 	@ResponseBody
@@ -48,13 +51,14 @@ public class AppController {
 		//@formatter:on
 	}
 
-	@PostMapping("/app/reset")
+	@PostMapping(UrlConstants.APP_RESET)
 	public void reset() {
 		routeRepository.deleteAll();
 		airportRepository.deleteAll();
 		commentRepository.deleteAll();
 		cityRepository.deleteAll();
 		appUserRepository.deleteAll();
+		flightServiceCache.clear();
 	}
 
 }

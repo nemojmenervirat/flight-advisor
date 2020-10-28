@@ -13,6 +13,7 @@ import com.github.nemojmenervirat.flightadvisor.model.Route;
 import com.github.nemojmenervirat.flightadvisor.parsecsv.ParseRoutesContext;
 import com.github.nemojmenervirat.flightadvisor.repository.AirportRepository;
 import com.github.nemojmenervirat.flightadvisor.repository.RouteRepository;
+import com.github.nemojmenervirat.flightadvisor.service.FlightServiceCache;
 import com.github.nemojmenervirat.flightadvisor.service.RouteService;
 
 @Service
@@ -22,11 +23,8 @@ class RouteServiceImpl implements RouteService {
 	private AirportRepository airportRepository;
 	@Autowired
 	private RouteRepository routeRepository;
-
-	@Override
-	public List<Route> getAll() {
-		return routeRepository.findAll();
-	}
+	@Autowired
+	private FlightServiceCache flightServiceCache;
 
 	private Long tryParse(String str) {
 		try {
@@ -54,6 +52,8 @@ class RouteServiceImpl implements RouteService {
 
 	@Override
 	public ParseRoutesContext processStarted() {
+		flightServiceCache.clear();
+
 		ParseRoutesContext context = new ParseRoutesContext();
 		List<Airport> airports = airportRepository.findAll();
 		Map<Long, Airport> airportIdMap = airports.stream().collect(Collectors.toMap(airport -> airport.getAirportId(), airport -> airport));
@@ -86,8 +86,6 @@ class RouteServiceImpl implements RouteService {
 		route.setAirlineId(tryParse(row[1]));
 		route.setSourceAirport(sourceAirport);
 		route.setDestinationAirport(destinationAirport);
-		route.setSourceCity(sourceAirport.getCity());
-		route.setDestinationCity(destinationAirport.getCity());
 		route.setPrice(new BigDecimal(row[9]));
 		context.addResult(route);
 	}

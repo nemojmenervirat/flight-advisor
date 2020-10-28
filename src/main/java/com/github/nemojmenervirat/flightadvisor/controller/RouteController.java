@@ -1,16 +1,12 @@
 package com.github.nemojmenervirat.flightadvisor.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.github.nemojmenervirat.flightadvisor.exception.CustomException;
-import com.github.nemojmenervirat.flightadvisor.model.Route;
 import com.github.nemojmenervirat.flightadvisor.parsecsv.ParseItemsResult;
 import com.github.nemojmenervirat.flightadvisor.service.RouteService;
 import com.github.nemojmenervirat.flightadvisor.utils.FileUtils;
@@ -20,11 +16,6 @@ public class RouteController {
 
 	@Autowired
 	private RouteService routeService;
-
-	@GetMapping(UrlConstants.ROUTES)
-	public List<Route> get() {
-		return routeService.getAll();
-	}
 
 	@PostMapping(UrlConstants.ROUTES_IMPORT)
 	public String upload(@RequestParam("file") MultipartFile file) {

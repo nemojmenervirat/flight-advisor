@@ -1,7 +1,6 @@
 package com.github.nemojmenervirat.flightadvisor.service.impl;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -22,11 +21,6 @@ class AirportServiceImpl implements AirportService {
 	private CityRepository cityRepository;
 	@Autowired
 	private AirportRepository airportRepository;
-
-	@Override
-	public List<Airport> getAll() {
-		return airportRepository.findAll();
-	}
 
 	private String cityCountryKey(String country, String city) {
 		return country + "_" + city;

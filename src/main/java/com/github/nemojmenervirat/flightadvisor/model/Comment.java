@@ -2,14 +2,13 @@ package com.github.nemojmenervirat.flightadvisor.model;
 
 import java.time.LocalDateTime;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table
@@ -18,19 +17,19 @@ public class Comment {
 	@Id
 	@GeneratedValue
 	private Long commentId;
+
+	@Column(length = 250)
 	private String description;
-	@JsonIgnore
+
 	private LocalDateTime created;
 	private LocalDateTime modified;
 
 	@ManyToOne
 	@JoinColumn(name = "city_id")
-	@JsonIgnore
 	private City city;
 
 	@ManyToOne
 	@JoinColumn(name = "app_user_id")
-	@JsonIgnore
 	private AppUser appUser;
 
 	public Long getCommentId() {

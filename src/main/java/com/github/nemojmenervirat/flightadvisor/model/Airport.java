@@ -2,6 +2,7 @@ package com.github.nemojmenervirat.flightadvisor.model;
 
 import java.math.BigDecimal;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -20,8 +21,12 @@ public class Airport {
 	@JoinColumn(name = "city_id")
 	private City city;
 
+	@Column(length = 3)
 	private String iata;
+
+	@Column(length = 4)
 	private String icao;
+
 	private BigDecimal latitude;
 	private BigDecimal longitude;
 

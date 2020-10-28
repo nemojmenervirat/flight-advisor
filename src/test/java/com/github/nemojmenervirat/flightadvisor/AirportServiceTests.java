@@ -17,8 +17,8 @@ import org.springframework.test.annotation.Rollback;
 import com.github.nemojmenervirat.flightadvisor.model.City;
 import com.github.nemojmenervirat.flightadvisor.parsecsv.ParseAirportsContext;
 import com.github.nemojmenervirat.flightadvisor.parsecsv.ParseItemsResult;
+import com.github.nemojmenervirat.flightadvisor.repository.CityRepository;
 import com.github.nemojmenervirat.flightadvisor.service.AirportService;
-import com.github.nemojmenervirat.flightadvisor.service.CityService;
 import com.github.nemojmenervirat.flightadvisor.utils.FileUtils;
 
 @SpringBootTest
@@ -27,7 +27,7 @@ public class AirportServiceTests {
 	@Autowired
 	private AirportService airportService;
 	@Autowired
-	private CityService cityService;
+	private CityRepository cityRepository;
 
 	@Test
 	void contextLoads() {
@@ -69,7 +69,7 @@ public class AirportServiceTests {
 		city.setName("New York");
 		city.setCountry("United States");
 		city.setDescription("Nice city");
-		cityService.add(city);
+		cityRepository.save(city);
 
 		InputStream inputStream = new ClassPathResource("airports.txt").getInputStream();
 		ParseItemsResult result = FileUtils.parseCsv(inputStream, airportService);

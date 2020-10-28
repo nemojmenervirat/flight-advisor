@@ -1,16 +1,21 @@
 package com.github.nemojmenervirat.flightadvisor.payload;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
 
 public class SignUpRequest {
 
 	@NotEmpty
+	@Size(max = 20)
 	private String username;
 	@NotEmpty
+	@Size(max = 20)
 	private String password;
 	@NotEmpty
+	@Size(max = 20)
 	private String firstName;
 	@NotEmpty
+	@Size(max = 20)
 	private String lastName;
 
 	public String getUsername() {

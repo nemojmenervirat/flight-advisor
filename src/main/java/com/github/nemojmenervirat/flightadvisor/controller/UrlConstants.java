@@ -9,10 +9,9 @@ public class UrlConstants {
 	public static final String CITY = "/cities/{cityId}";
 	public static final String CITY_COMMENTS = "/cities/{cityId}/comments";
 	public static final String CITY_COMMENT = "/cities/{cityId}/comments/{commentId}";
-	public static final String ROUTES = "/routes";
-	public static final String ROUTES_IMPORT = "/routes/import";
-	public static final String AIRPORTS = "/airports";
 	public static final String AIRPORTS_IMPORT = "/airports/import";
+	public static final String ROUTES_IMPORT = "/routes/import";
 	public static final String FLIGHT_CHEAPEST = "/flight/cheapest";
+	public static final String APP_RESET = "/app/reset";
 
 }
