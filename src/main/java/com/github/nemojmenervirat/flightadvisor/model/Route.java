@@ -86,4 +86,8 @@ public class Route {
 		this.price = price;
 	}
 
+	public String getKey() {
+		return sourceAirport.getAirportId() + "_" + destinationAirport.getAirportId() + "_" + airline + "_" + price;
+	}
+
 }

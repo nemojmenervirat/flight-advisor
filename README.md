@@ -31,7 +31,7 @@ POST /app-user/login
 	"password":"12345"
 }
 ```
-Returns token.
+Returns token. Use it in header `Authorization: Bearer token` for future requests.
 
 #### Get Cities (user)
 ```
@@ -53,8 +53,10 @@ POST /cities
 #### Import Cities (administrator)
 ```
 POST /cities/import
+
+form-data file airports.txt
 ```
-Imports cities from airports data set. Relevant columns city in 2nd column and country in 3rd (0 indexed).
+Imports cities from airports data set. Relevant columns are city in 2nd column and country in 3rd (0 indexed).
 
 #### Remove City (administrator)
 ```
@@ -87,16 +89,20 @@ DELETE /cities/{cityId}
 #### Import Airports (administrator)
 ```
 POST /airports/import
+
+form-data file airports.txt
 ```
 
 #### Import Routes (administrator)
 ```
 POST /routes/import
+
+form-data file routes.txt
 ```
 
 #### Find Cheapest Flight (user)
 ```
-GET /flight/cheapest?sourceCountry=value1&sourceCity=value2&destinationCountry=value3&destinationCity=value4
+GET /flight/cheapest?sourceCityId=value1&destinationCityId=value2
 ```
 
 # Usage and examples
@@ -110,8 +116,8 @@ POST /app-user/login
 	"password":"admin"
 }
 ```
-After successful login take token from response body and use it in next requests in `Authorization` header with prefix `Bearer `. As administrator you can add or import cities, import airports and import routes.
-As user you can add, change and remove comments on cities, get all cities with comments or search for specific city, also you can find cheapest route between two cities.
+After successful login take token from response body and use it in next requests in `Authorization` header with prefix `Bearer `. As administrator you can add, import and remove cities, import airports and import routes.
+As user you can add, change and remove comments on cities, get all cities with comments or search for specific city by name, also you can find cheapest route between two cities.
 
 # Demo
 

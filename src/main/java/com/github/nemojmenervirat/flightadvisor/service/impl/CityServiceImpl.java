@@ -2,11 +2,14 @@ package com.github.nemojmenervirat.flightadvisor.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.github.nemojmenervirat.flightadvisor.exception.AuthorizationException;
 import com.github.nemojmenervirat.flightadvisor.exception.CustomException;
 import com.github.nemojmenervirat.flightadvisor.model.City;
 import com.github.nemojmenervirat.flightadvisor.model.Comment;
@@ -14,6 +17,7 @@ import com.github.nemojmenervirat.flightadvisor.parsecsv.ParseCitiesContext;
 import com.github.nemojmenervirat.flightadvisor.payload.CityRequest;
 import com.github.nemojmenervirat.flightadvisor.payload.CityResponse;
 import com.github.nemojmenervirat.flightadvisor.payload.CommentResponse;
+import com.github.nemojmenervirat.flightadvisor.repository.AppUserRepository;
 import com.github.nemojmenervirat.flightadvisor.repository.CityRepository;
 import com.github.nemojmenervirat.flightadvisor.repository.CommentRepository;
 import com.github.nemojmenervirat.flightadvisor.security.SecurityUtils;
@@ -26,6 +30,8 @@ class CityServiceImpl implements CityService {
 	private CityRepository cityRepository;
 	@Autowired
 	private CommentRepository commentRepository;
+	@Autowired
+	private AppUserRepository appUserRepository;
 
 	@Override
 	public List<CityResponse> getByNameLimitComments(String name, Integer limitComments) {
@@ -41,6 +47,7 @@ class CityServiceImpl implements CityService {
 		CityResponse cityResponse = new CityResponse();
 		cityResponse.setCityId(city.getCityId());
 		cityResponse.setName(city.getName());
+		cityResponse.setCountry(city.getCountry());
 		cityResponse.setDescription(city.getDescription());
 		cityResponse.setComments(city.getComments().stream().map(comment -> map(comment)).collect(Collectors.toList()));
 		return cityResponse;
@@ -83,15 +90,16 @@ class CityServiceImpl implements CityService {
 		comment.setModified(LocalDateTime.now());
 		comment.setCreated(comment.getModified());
 		comment.setCity(city);
-		comment.setAppUser(SecurityUtils.getAppUser());
+		comment.setAppUser(appUserRepository.findOneByUsernameIgnoreCase(SecurityUtils.getUsername())
+				.orElseThrow(() -> new UsernameNotFoundException("No user present with username: " + SecurityUtils.getUsername())));
 		commentRepository.save(comment);
 	}
 
 	@Override
 	public void updateComment(Long commentId, String description) {
 		Comment comment = commentRepository.findByIdOrThrow(commentId);
-		if (!comment.getAppUser().equals(SecurityUtils.getAppUser())) {
-			throw new CustomException("You can update only comments you add!");
+		if (!SecurityUtils.isCurrent(comment.getAppUser())) {
+			throw new AuthorizationException("You can update only comments you add!");
 		}
 		comment.setModified(LocalDateTime.now());
 		comment.setDescription(description);
@@ -101,15 +109,18 @@ class CityServiceImpl implements CityService {
 	@Override
 	public void removeComment(Long commentId) {
 		Comment comment = commentRepository.findByIdOrThrow(commentId);
-		if (!comment.getAppUser().equals(SecurityUtils.getAppUser())) {
-			throw new CustomException("You can delete only comments you add!");
+		if (!SecurityUtils.isCurrent(comment.getAppUser())) {
+			throw new AuthorizationException("You can delete only comments you add!");
 		}
 		commentRepository.delete(comment);
 	}
 
 	@Override
 	public ParseCitiesContext processStarted() {
-		return new ParseCitiesContext();
+		ParseCitiesContext context = new ParseCitiesContext();
+		Map<String, City> existingCityMap = cityRepository.findAll().stream().collect(Collectors.toMap(city -> city.getKey(), city -> city));
+		context.setExistingCityMap(existingCityMap);
+		return context;
 	}
 
 	@Override
@@ -117,7 +128,8 @@ class CityServiceImpl implements CityService {
 		City city = new City();
 		city.setName(row[2]);
 		city.setCountry(row[3]);
-		if (city.getName() == null || city.getName().isBlank() || city.getCountry() == null || city.getCountry().isBlank()) {
+		if (city.getName() == null || city.getName().isBlank() || city.getCountry() == null || city.getCountry().isBlank()
+				|| context.getExistingCityMap().containsKey(city.getKey())) {
 			context.ignoreRow();
 			return;
 		}

@@ -7,18 +7,18 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.github.nemojmenervirat.flightadvisor.repository.AppUserRepository;
+import com.github.nemojmenervirat.flightadvisor.service.AppUserService;
 
 @Primary
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
 	@Autowired
-	private AppUserRepository appUserRepository;
+	private AppUserService appUserService;
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		return appUserRepository.findOneByUsernameIgnoreCase(username).map(CustomPrincipal::create)
+		return appUserService.findOneByUsernameIgnoreCase(username).map(CustomPrincipal::create)
 				.orElseThrow(() -> new UsernameNotFoundException("No user present with username: " + username));
 	}
 }

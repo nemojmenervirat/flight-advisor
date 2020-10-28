@@ -17,9 +17,8 @@ public class FlightController {
 	private FlightService flightService;
 
 	@GetMapping(UrlConstants.FLIGHT_CHEAPEST)
-	public ResponseEntity<FlightResponse> getCheapest(@RequestParam String sourceCountry, @RequestParam String sourceCity,
-			@RequestParam String destinationCountry, @RequestParam String destinationCity) {
-		FlightResponse flightResponse = flightService.getCheapestRoute(sourceCountry, sourceCity, destinationCountry, destinationCity);
+	public ResponseEntity<FlightResponse> getCheapest(@RequestParam Long sourceCityId, @RequestParam Long destinationCityId) {
+		FlightResponse flightResponse = flightService.getCheapestRoute(sourceCityId, destinationCityId);
 		if (flightResponse == null || flightResponse.getRoutes().isEmpty()) {
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		}

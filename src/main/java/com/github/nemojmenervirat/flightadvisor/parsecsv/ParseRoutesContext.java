@@ -10,6 +10,15 @@ public class ParseRoutesContext extends ParseItemsContext<Route> {
 	private Map<Long, Airport> airportIdMap;
 	private Map<String, Airport> airportIataMap;
 	private Map<String, Airport> airportIcaoMap;
+	private Map<String, Route> existingRouteMap;
+
+	public Map<String, Route> getExistingRouteMap() {
+		return existingRouteMap;
+	}
+
+	public void setExistingRouteMap(Map<String, Route> existingRouteMap) {
+		this.existingRouteMap = existingRouteMap;
+	}
 
 	public Map<Long, Airport> getAirportIdMap() {
 		return airportIdMap;

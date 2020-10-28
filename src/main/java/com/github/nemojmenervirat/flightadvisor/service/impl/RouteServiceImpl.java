@@ -61,9 +61,11 @@ class RouteServiceImpl implements RouteService {
 				.collect(Collectors.toMap(airport -> airport.getIata(), airport -> airport));
 		Map<String, Airport> airportIcaoMap = airports.stream().filter(airport -> airport.getIcao() != null && !airport.getIcao().equals("\\N"))
 				.collect(Collectors.toMap(airport -> airport.getIcao(), airport -> airport));
+		Map<String, Route> existingRouteMap = routeRepository.findAll().stream().collect(Collectors.toMap(route -> route.getKey(), route -> route));
 		context.setAirportIdMap(airportIdMap);
 		context.setAirportIataMap(airportIataMap);
 		context.setAirportIcaoMap(airportIcaoMap);
+		context.setExistingRouteMap(existingRouteMap);
 		return context;
 	}
 
@@ -72,6 +74,7 @@ class RouteServiceImpl implements RouteService {
 
 		Airport sourceAirport = findAirport(row[3], row[2], context);
 		if (sourceAirport == null) {
+			context.ignoreRow();
 			return;
 		}
 
@@ -87,6 +90,12 @@ class RouteServiceImpl implements RouteService {
 		route.setSourceAirport(sourceAirport);
 		route.setDestinationAirport(destinationAirport);
 		route.setPrice(new BigDecimal(row[9]));
+
+		if (context.getExistingRouteMap().containsKey(route.getKey())) {
+			context.ignoreRow();
+			return;
+		}
+
 		context.addResult(route);
 	}
 

@@ -19,7 +19,7 @@ import com.univocity.parsers.csv.UnescapedQuoteHandling;
 public class FileUtils {
 
 	public static boolean isTxtOrCsv(MultipartFile file) {
-		return file.getContentType() != "text/csv" && file.getContentType() != "text/plain";
+		return file.getContentType().equals("text/csv") || file.getContentType().equals("text/plain");
 	}
 
 	public static <C extends ParseItemsContext<T>, T> ParseItemsResult parseCsv(MultipartFile file, ParseProcessor<T, C> processor) {

@@ -35,12 +35,12 @@ class FlightServiceImpl implements FlightService {
 	private FlightServiceCache cache;
 
 	@Override
-	public FlightResponse getCheapestRoute(String sourceCountry, String sourceCity, String destinationCountry, String destinationCity) {
+	public FlightResponse getCheapestRoute(Long sourceCityId, Long destinationCityId) {
 
-		City source = cityRepository.findByCountryAndNameOrThrow(sourceCountry, sourceCity);
-		City destination = cityRepository.findByCountryAndNameOrThrow(destinationCountry, destinationCity);
+		City sourceCity = cityRepository.findByIdOrThrow(sourceCityId);
+		City destinationCity = cityRepository.findByIdOrThrow(destinationCityId);
 
-		FlightResponse cachedResponse = cache.getFlightResponse(source.getCityId(), destination.getCityId());
+		FlightResponse cachedResponse = cache.getFlightResponse(sourceCity.getCityId(), destinationCity.getCityId());
 		if (cachedResponse != null) {
 			log.info("Returning cached response.");
 			return cachedResponse;
@@ -54,12 +54,12 @@ class FlightServiceImpl implements FlightService {
 			cache.getGraph().resetDistances();
 			log.info("Reseting distances.");
 		}
-		Node sourceNode = cache.getGraph().get(source);
+		Node sourceNode = cache.getGraph().get(sourceCity);
 		if (sourceNode == null) {
 			return null;
 		}
 		cache.getGraph().calculateShortestPath(sourceNode);
-		Node destinationNode = cache.getGraph().get(destination);
+		Node destinationNode = cache.getGraph().get(destinationCity);
 		if (destinationNode == null) {
 			return null;
 		}
@@ -69,7 +69,7 @@ class FlightServiceImpl implements FlightService {
 			return null;
 		}
 		FlightResponse flightResponse = map(routes);
-		cache.addFlightResponse(source.getCityId(), destination.getCityId(), flightResponse);
+		cache.addFlightResponse(sourceCity.getCityId(), destinationCity.getCityId(), flightResponse);
 		return flightResponse;
 	}
 

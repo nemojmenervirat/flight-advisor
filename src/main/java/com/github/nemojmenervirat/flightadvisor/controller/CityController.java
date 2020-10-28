@@ -19,6 +19,7 @@ import com.github.nemojmenervirat.flightadvisor.exception.CustomException;
 import com.github.nemojmenervirat.flightadvisor.parsecsv.ParseItemsResult;
 import com.github.nemojmenervirat.flightadvisor.payload.CityRequest;
 import com.github.nemojmenervirat.flightadvisor.payload.CityResponse;
+import com.github.nemojmenervirat.flightadvisor.payload.CommentRequest;
 import com.github.nemojmenervirat.flightadvisor.service.CityService;
 import com.github.nemojmenervirat.flightadvisor.utils.FileUtils;
 
@@ -30,6 +31,9 @@ public class CityController {
 
 	@GetMapping(UrlConstants.CITIES)
 	public List<CityResponse> get(@RequestParam(required = false) String name, @RequestParam(required = false) Integer limitComments) {
+		if (limitComments != null && limitComments < 1) {
+			throw new CustomException("LimitComments must be greater than or equals to 1");
+		}
 		return cityService.getByNameLimitComments(name, limitComments);
 	}
 
@@ -53,13 +57,13 @@ public class CityController {
 	}
 
 	@PostMapping(UrlConstants.CITY_COMMENTS)
-	public void addComment(@PathVariable Long cityId, @RequestBody String description) {
-		cityService.addComment(cityId, description);
+	public void addComment(@PathVariable Long cityId, @RequestBody CommentRequest request) {
+		cityService.addComment(cityId, request.getDescription());
 	}
 
 	@PutMapping(UrlConstants.CITY_COMMENT)
-	public void updateComment(@PathVariable Long cityId, @PathVariable Long commentId, @RequestBody String description) {
-		cityService.updateComment(commentId, description);
+	public void updateComment(@PathVariable Long cityId, @PathVariable Long commentId, @RequestBody CommentRequest request) {
+		cityService.updateComment(commentId, request.getDescription());
 	}
 
 	@DeleteMapping(UrlConstants.CITY_COMMENT)

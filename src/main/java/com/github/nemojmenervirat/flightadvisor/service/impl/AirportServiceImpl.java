@@ -31,23 +31,27 @@ class AirportServiceImpl implements AirportService {
 		ParseAirportsContext context = new ParseAirportsContext();
 		Map<String, City> cityMap = cityRepository.findAll().stream()
 				.collect(Collectors.toMap(city -> cityCountryKey(city.getCountry(), city.getName()), city -> city));
+		Map<Long, Airport> existingAirportMap = airportRepository.findAll().stream()
+				.collect(Collectors.toMap(airport -> airport.getAirportId(), airport -> airport));
 		context.setCityMap(cityMap);
+		context.setExistingAirportMap(existingAirportMap);
 		return context;
 	}
 
 	@Override
 	public void rowProcessed(String[] row, ParseAirportsContext context) {
+		Long airportId = Long.parseLong(row[0]);
 		String cityName = row[2];
 		String countryName = row[3];
 		String key = cityCountryKey(countryName, cityName);
 		City city = context.getCityMap().get(key);
-		if (city == null) {
+		if (city == null || context.getExistingAirportMap().containsKey(airportId)) {
 			context.ignoreRow();
 			return;
 		}
 
 		Airport airport = new Airport();
-		airport.setAirportId(Long.parseLong(row[0]));
+		airport.setAirportId(airportId);
 		airport.setName(row[1]);
 		airport.setCity(city);
 		airport.setIata(row[4]);

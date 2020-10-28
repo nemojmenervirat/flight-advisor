@@ -1,8 +1,13 @@
 package com.github.nemojmenervirat.flightadvisor.service.impl;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +45,17 @@ class AppUserServiceImpl implements AppUserService {
 	public String getSaltedPassword(String username, String password) {
 		AppUser appUser = appUserRepository.findOneByUsernameIgnoreCase(username).orElseThrow(() -> new CustomException("User not found"));
 		return password + appUser.getSalt();
+	}
+
+	@Override
+	public Collection<? extends GrantedAuthority> getGrantedAuthorities(String username) {
+		AppUser appUser = appUserRepository.findOneByUsernameIgnoreCase(username).orElseThrow(() -> new CustomException("User not found"));
+		return Arrays.asList(new SimpleGrantedAuthority(appUser.getRole().getValue()));
+	}
+
+	@Override
+	public Optional<AppUser> findOneByUsernameIgnoreCase(String username) {
+		return appUserRepository.findOneByUsernameIgnoreCase(username);
 	}
 
 }

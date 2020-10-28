@@ -1,6 +1,5 @@
 package com.github.nemojmenervirat.flightadvisor.security;
 
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -8,18 +7,13 @@ import com.github.nemojmenervirat.flightadvisor.model.AppUser;
 
 public class SecurityUtils {
 
-	public static AppUser getAppUser() {
+	public static String getUsername() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (isUserLoggedIn(authentication)) {
-			CustomPrincipal customPrincipal = (CustomPrincipal) authentication.getPrincipal();
-			return customPrincipal.getAppUser();
-		} else {
-			return null;
-		}
+		return authentication.getName();
 	}
 
-	private static boolean isUserLoggedIn(Authentication authentication) {
-		return authentication != null && !(authentication instanceof AnonymousAuthenticationToken);
+	public static boolean isCurrent(AppUser appUser) {
+		return appUser.getUsername().toUpperCase().equals(SecurityUtils.getUsername().toUpperCase());
 	}
 
 }

@@ -43,6 +43,7 @@ public class AirportServiceTests {
 		city.setCountry("Papua New Guinea");
 		cityMap.put(city.getCountry() + "_" + city.getName(), city);
 		context.setCityMap(cityMap);
+		context.setExistingAirportMap(new HashMap<>());
 
 		String[] row = { "1", "Goroka Airport", "Goroka", "Papua New Guinea", "GKA", "AYGA", "-6.081689834590001", "145.391998291", "5282", "10",
 				"U", "Pacific/Port_Moresby", "airport", "OurAirports" };

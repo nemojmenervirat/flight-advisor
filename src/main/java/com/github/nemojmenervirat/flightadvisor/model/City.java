@@ -72,6 +72,10 @@ public class City {
 		this.comments = comments;
 	}
 
+	public String getKey() {
+		return country + "_" + name;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof City) {

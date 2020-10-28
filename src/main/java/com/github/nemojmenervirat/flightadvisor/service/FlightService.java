@@ -4,6 +4,6 @@ import com.github.nemojmenervirat.flightadvisor.payload.FlightResponse;
 
 public interface FlightService {
 
-	public FlightResponse getCheapestRoute(String sourceCountry, String sourceCity, String destinationCountry, String destinationCity);
+	public FlightResponse getCheapestRoute(Long sourceCityId, Long destinationCityId);
 
 }
